@@ -31,7 +31,8 @@ adc = ADS1015(i2c, ADS1015_ADDR)
 
 # Helping functions
 def send_value(value):
-    uart.write(str(value) + "\n")  # Turns value into string and send it to UART
+    uart.write(str(value) + "\n")# Turns value into string and send it to UART
+    time.sleep(0.05)
 
 def receive_value():
     if uart.any():       #check if there's data in progress
@@ -42,7 +43,9 @@ def receive_value():
     return None
 
 def read_filtered_pwm():
-    return adc.read(0, ADS1015_PWM) # Reads voltage from ADC channel 0
+    raw = adc.read(0, ADS1015_PWM) # Reads voltage from ADC channel 0
+    time.sleep(0.05)
+    return raw
 
 def button_pressed():
     if button.value():
@@ -53,24 +56,28 @@ def button_pressed():
 # Main loop that measures, sends, and receives PWM values
 while True:
     if button_pressed():
-
         # Sends PWM duty to partner
         send_value(DUTY_DEFAULT)
-
-        # Waits for partner measurement
+        
+        # Receive partner's PWM duty
+        partner_pwm = None
+        while partner_pwm is None:
+            partner_pwm = receive_value()
+            
+        # Measures our PWM
+        my_measure = read_filtered_pwm()
+        
+        # Sends our measurement back to partner
+        send_value(my_measure)
+        
+        # Receive partner's ADC measurement
         partner_measure = None
         while partner_measure is None:
             partner_measure = receive_value()
-
-        # Measures our PWM
-        my_measure = read_filtered_pwm()
-
-        # Sends our measurement back to partner
-        send_value(my_measure)
-
+        
         # Computes and prints difference
         difference = abs(partner_measure - my_measure)
-
+        
         print("\n=== RESULT ===")
         print("Partner measured:", partner_measure)
         print("You measured:    ", my_measure)
