@@ -68,8 +68,8 @@ while True:
         # Sends our measurement back to partner
         send_value(my_measure)
 
-        # Computes difference
-        difference = abs(DUTY_DEFAULT - my_measure)
+        # Computes and prints difference
+        difference = abs(partner_measure - my_measure)
 
         print("\n=== RESULT ===")
         print("Partner measured:", partner_measure)
