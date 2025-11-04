@@ -11,9 +11,9 @@ DUTY_DEFAULT = 32768
 DEBOUNCE = 0.2
 
 # I2C Signal Pins
-I2C_SDA = 14
-I2C_SCL = 15
-ADS1015_ADDR = 0x48
+I2C_SDA = 14    #serial data 
+I2C_SCL = 15    #serial clock 
+ADS1015_ADDR = 0x48     #address for the analog - to - digital converter
 ADS1015_PWM = 2
 
 # Sets up hardware
@@ -26,27 +26,27 @@ uart = UART(1, 115200, tx=Pin(UART_TX), rx=Pin(UART_RX))
 
 # I2C + ADS 1015 configuration information
 i2c = I2C(1, sda=Pin(14), scl=Pin(15))
-from ads1x15 import ADS1015
+from ads1x15 import ADS1015    #code given by the prof to convert the signals into digital format
 adc = ADS1015(i2c, ADS1015_ADDR)
 
 # Helping functions
 def send_value(value):
-    uart.write(str(value) + "\n")
+    uart.write(str(value) + "\n")  # Turns value into string and send it to UART
 
 def receive_value():
-    if uart.any():
+    if uart.any():       #check if there's data in progress
         try:
-            return int(uart.readline().strip())
+            return int(uart.readline().strip()) #deciphers the line and turns it back into integer + cleans it up
         except:
             return None
     return None
 
 def read_filtered_pwm():
-    return adc.read(0, ADS1015_PWM)
+    return adc.read(0, ADS1015_PWM) # Reads voltage from ADC channel 0
 
 def button_pressed():
     if button.value():
-        time.sleep(0.2)
+        time.sleep(0.2)    #debounces the button 
         return True
     return False
 
