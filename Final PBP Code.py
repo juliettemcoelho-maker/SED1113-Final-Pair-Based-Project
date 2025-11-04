@@ -1,7 +1,7 @@
 from machine import Pin, PWM, I2C, UART
 import time
 
-# === CONFIG ===
+# Pin configuration
 PWM_PIN = 16
 BUTTON_PIN = 13
 UART_TX = 8
@@ -10,26 +10,26 @@ UART_RX = 9
 DUTY_DEFAULT = 32768
 DEBOUNCE = 0.2
 
-# I2C / ADS1015
+# I2C Signal Pins
 I2C_SDA = 14
 I2C_SCL = 15
 ADS1015_ADDR = 0x48
-ADS1015_PWM = 2   # AIN1 = correct channel
+ADS1015_PWM = 2
 
-# === HARDWARE SETUP ===
-pwm = PWM(Pin(PWM_PIN))
+# Sets up hardware
+pwm = PWM(Pin(16))
 pwm.freq(1000)
 pwm.duty_u16(DUTY_DEFAULT)
 
 button = Pin(BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 uart = UART(1, 115200, tx=Pin(UART_TX), rx=Pin(UART_RX))
 
-# I2C + ADS1015 setup
-i2c = I2C(1, sda=Pin(I2C_SDA), scl=Pin(I2C_SCL))
+# I2C + ADS 1015 configuration information
+i2c = I2C(1, sda=Pin(14), scl=Pin(15))
 from ads1x15 import ADS1015
 adc = ADS1015(i2c, ADS1015_ADDR)
 
-# === FUNCTIONS ===
+# Helping functions
 def send_value(value):
     uart.write(str(value) + "\n")
 
@@ -46,29 +46,29 @@ def read_filtered_pwm():
 
 def button_pressed():
     if button.value():
-        time.sleep(DEBOUNCE)
+        time.sleep(0.2)
         return True
     return False
 
-# === MAIN LOOP ===
+# Main loop that measures, sends, and receives PWM values
 while True:
     if button_pressed():
 
-        # Send desired PWM duty to partner
+        # Sends PWM duty to partner
         send_value(DUTY_DEFAULT)
 
-        # Wait for partner's measurement
+        # Waits for partner measurement
         partner_measure = None
         while partner_measure is None:
             partner_measure = receive_value()
 
-        # Measure our PWM
+        # Measures our PWM
         my_measure = read_filtered_pwm()
 
-        # Send our measurement back to partner
+        # Sends our measurement back to partner
         send_value(my_measure)
 
-        # Compute difference
+        # Computes difference
         difference = abs(DUTY_DEFAULT - my_measure)
 
         print("\n=== RESULT ===")
